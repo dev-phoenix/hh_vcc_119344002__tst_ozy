@@ -8,6 +8,21 @@ from pathlib import Path
 
 import time
 from datetime import datetime as dt
+from colorama import Fore, Back, init
+# import art
+
+init()
+class color:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
 
 
 def _print(*args, **kwargs):
@@ -40,10 +55,34 @@ class POLog():
         self.save(st)
 
 
-    def logTime(self, label='', sep=''):
+    def logTime(self, label='', sep='',**kwargs):
         # dest_ex = os.path.isfile(pdest)
         # if not os.path.isfile(fn): return False
         # shutil.copy(pfrom, pdest)
+        start=''
+        end=''
+
+        # label color
+        start_colr=''
+        end_colr=''
+        if 'start' in kwargs:
+            start = kwargs['start']
+        if 'end' in kwargs:
+            end = kwargs['end']
+        # if start and not end :
+        #     end = kwargs['end']
+        if 'start_colr' in kwargs:
+            start_colr = kwargs['start_colr']
+        if 'end_colr' in kwargs:
+            end_colr = kwargs['end_colr']
+        if start_colr and not end_colr :
+            end_colr = color.END
+        # print(color.BOLD+color.BLUE+'========== =========='+color.END)
+        if start_colr :
+            label = start_colr+label
+        if end_colr :
+            label = label+end_colr
+        
         self.tlog(label, sep)
 
 

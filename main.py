@@ -1,5 +1,8 @@
 '''
 main.py
+created: 2025.04.10
+author: WSD
+for: bz30
 '''
 
 import time
@@ -14,10 +17,35 @@ import re
 from multiprocessing import Pool
 
 from libs.lib_ozy import POLog, _print
+from colorama import Fore, Back, init
+import art
+
+init()
+class color:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
 
 lg = POLog()
 lg.logTime()
 lg.logTime('Start.')
+# lg.logTime('Start.', start_colr=color.GREEN)
+
+
+title = (Fore.GREEN + 'start' + Fore.RESET)
+_print(title)
+title = 'OZY v0.1'
+t = art.text2art(title, 'epic')
+title = (Fore.GREEN + t + Fore.RESET)
+print(title)
 
 
 from selenium import webdriver
@@ -375,13 +403,15 @@ def saveData(jsn,file_name = 'content.json'):
         lg.logTime('json saved')
 
 
-def getContent(driver, getAsJson = True):
+def getContent(url, driver, getAsJson = True):
     """
     get page content
     """
     wd = driver
+    wd.get(url)
+    lg.logTime('page get')
     jsnin = False
-    time.sleep(3)
+    # time.sleep(3)
     # time.sleep(10)
     # time.sleep(60)
     # time.sleep(60)
@@ -423,11 +453,18 @@ def getContent(driver, getAsJson = True):
     if getAsJson:
 
         for i in range(10):
-            # _print(type(htpsrc))
-            element = driver.find_element(By.TAG_NAME, 'pre')
-            # _print(jpsrc)
+            element = False
+            try:
+                # _print(type(htpsrc))
+                element = driver.find_element(By.TAG_NAME, 'pre')
+                # _print(jpsrc)
+            except Exception as ex:
+                    # print(ex.split('\n')[0])
+                    # print(ex)
+                    print(ex.msg)
+                    # a=[print(att) for att in dir(ex)]
             if not element:
-                _print('sleep +1s')
+                _print(color.RED + 'sleep +1s' + color.END )
                 time.sleep(1)
                 continue
 
@@ -465,6 +502,31 @@ def getUrls(catalogUrl='',driver=False):
     items = driver.find_elements_by_xpath('//div[@data-market="item-photo"]')
     items[0].click()
     time.sleep(5)
+
+
+def getPages(wd,urls):
+    apnum=0
+    getAsJson = True
+    results = []
+    if not len(urls):
+        url=urls.pop(0)
+        return results
+    
+    jsnin = getContent(url, wd, getAsJson)
+    jsn = getData(jsnin)
+    results.append(jsn)
+    lg.logTime(f'append {apnum}');apnum+=1
+
+    jsnin = getContent(url, wd, getAsJson)
+    jsn = getData(jsnin)
+    results.append(jsn)
+    lg.logTime(f'append {apnum}');apnum+=1
+
+    jsnin = getContent(url, wd, getAsJson)
+    jsn = getData(jsnin)
+    results.append(jsn)
+    lg.logTime(f'append {apnum}');apnum+=1
+    return results
 
 
 # with WebDriver(webdriver.Chrome(**webdkargs)) as wd:
@@ -511,19 +573,9 @@ with WebDriver(driver) as wd:
                 wd.add_cookie(cookdict)
 
         try:
-            getAsJson = True
-            results = []
-            jsnin = getContent(wd, getAsJson)
-            jsn = getData(jsnin)
-            results.append(jsn)
-
-            jsnin = getContent(wd, getAsJson)
-            jsn = getData(jsnin)
-            results.append(jsn)
-
-            jsnin = getContent(wd, getAsJson)
-            jsn = getData(jsnin)
-            results.append(jsn)
+            lg.logTime('get json start')
+            urls = [url]
+            results = getPages(wd,urls)
 
             _print('try to dumps')
             # srcdump = json.dumps(dpsrc,indent=4)
@@ -532,6 +584,7 @@ with WebDriver(driver) as wd:
 
             # save dump for observe
             _print(srcdump)
+            lg.logTime('get json end')
 
             if srcdump:
                 out_file_name = 'content.json'
@@ -541,7 +594,7 @@ with WebDriver(driver) as wd:
             lg.logTime('get json error')
 
         tsp=4
-        tsp=100
+        # tsp=100
         time.sleep(tsp)
         # time.sleep(100)
         lg.logTime(f'Timeout {tsp}')

@@ -3,8 +3,9 @@ lib_ozy.py
 """
 
 import time
-import os
+import sys, os, json
 from pathlib import Path
+from inspect import currentframe, getframeinfo
 
 import time
 from datetime import datetime as dt
@@ -24,9 +25,82 @@ class color:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+Conf = {
+    'print':True,
+    'log':True,
+    'logprint':True,
+}
+
+
+def setconf(key,val):
+    if key in Conf:
+        Conf[key] = val
 
 def _print(*args, **kwargs):
-    print(*args, **kwargs)
+    if Conf['print']: print(*args, **kwargs)
+
+
+# функции отладки
+def dump(name='',val=None, indent=2, **kwargs):
+    print(kwargs)
+    print('parse' not in kwargs)
+    sep = ''
+    color = Fore.YELLOW
+    if 'color' in kwargs and kwargs['color'] in dir(Fore): # проверяем наличие атрибута
+        color = getattr(Fore, kwargs['color']) # получаем значение атрибута
+    if val.__class__.__name__ == 'dict' or val.__class__.__name__ == 'list':
+        if ('parse' in kwargs and not kwargs['parse']) or 'parse' not in kwargs: # 
+            val = json.dumps(val, indent=indent, ensure_ascii=False)
+        sep = '\n'
+    print( color + name + ': ' + sep + Fore.RESET, val)
+
+
+def line(): # текущая строка
+    ln = sys._getframe().f_lineno
+    ln = sys._getframe().f_back.f_lineno
+    return str(ln)
+def func(): # текущая функция
+    cf = currentframe().f_back
+    fr = getframeinfo(cf)
+    # fl = fr.filename
+    ln = fr.lineno
+    # if short:
+    fn = fr.function
+    return str(fn)+'()'
+def fileline(short=False, deep=2): # предыдущий вызов. файл, строка
+    cf = currentframe().f_back
+    if deep > 1: cf = cf.f_back
+    fr = getframeinfo(cf)
+    fl = fr.filename
+    ln = fr.lineno
+    if short:
+        fn = fr.function
+        fl = fl.split('/')[-1]
+        return fl + ' : ' + fn + ' : ' + str(ln)
+    return fl + ' : ' + str(ln)
+def funcline(short=False): # предыдущий вызов, функция, строка
+    cf = currentframe().f_back.f_back
+    fr = getframeinfo(cf)
+    # fl = fr.filename
+    ln = fr.lineno
+    # if short:
+    fn = fr.function
+    # fl = fl.split('/')[-1]
+    return  fn + '() : ' + str(ln)
+def fileline_short(short=False, deep=2): # предыдущий вызов. файл, функция, строка
+    cf = currentframe().f_back
+    if deep > 1: cf = cf.f_back
+    if deep > 2: cf = cf.f_back
+    if deep > 3: cf = cf.f_back
+    fr = getframeinfo(cf)
+    fl = fr.filename
+    fn = fr.function
+    ln = fr.lineno
+    # print(fr)
+    # if short:
+    fl = fl.split('/')[-1]
+    return fl + ' : ' + fn + '() : ' + str(ln)
+# / функции отладки
 
 
 class POLog():
@@ -94,6 +168,7 @@ class POLog():
 
     
     def save(self,st=''):
+        if not Conf['log']: return
         with open(self.logPath, 'a') as hendl:
             st += "\n"
             hendl.write(st);
@@ -113,7 +188,8 @@ class POLog():
         tpl='{0:02d}h {1:02d}m {2:02d}s .{3:04d}ms {4}'
         # args = ('Time forced:',tpl.format(int(h),int(m),s, ms, ('('+label+')') if label else '' ))
         args = ('Time spent:',tpl.format(int(h),int(m),s, ms, ('('+label+')') if label else '' ))
-        print(*args)
+        if Conf['logprint']: 
+            print(*args)
         self.save(' '.join(args))
     
 

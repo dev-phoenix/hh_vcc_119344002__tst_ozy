@@ -1,3 +1,4 @@
 *
 !.gitignore
-!chromedriver
+!/chromedriver
+!/chrome_96_x64.deb

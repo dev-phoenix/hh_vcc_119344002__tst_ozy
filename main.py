@@ -19,6 +19,7 @@ from multiprocessing import Pool
 from libs.lib_ozy import POLog, _print, line, dump, setconf
 from colorama import Fore, Back, init
 import art
+from libs.env import envservstat
 
 init()
 class color:
@@ -39,10 +40,12 @@ lg.logTime()
 lg.logTime('Start.')
 # lg.logTime('Start.', start_colr=color.GREEN)
 
-setconf('print', False)
-setconf('log', False)
-setconf('logprint', False)
+# setconf('print', False)
+# setconf('log', False)
+# setconf('logprint', False)
 
+isserv = 10
+isserv = envservstat
 hendless=False
 hendless=True
 category='/category/sistemnye-bloki-15704/?page=7'
@@ -74,6 +77,11 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium_stealth import stealth
 from fake_useragent import UserAgent
 import pickle
+
+if isserv :
+    from chromedriver_py import binary_path
+
+
 
 lg.logTime('libs loaded')
 
@@ -125,15 +133,25 @@ user_agents=[
 # options.add_argument('user-agent=HiWebDett')
 if hendless:
     options.add_argument('--headless')
-lg.logTime('started {} hendless'.format('as'if hendless else 'without'))
-# options.add_argument('--no-sandbox')
+    options.add_argument('--no-sandbox')
 # options.add_argument('--disable-dev-shm-usage')
+lg.logTime('started {} hendless'.format('as'if hendless else 'without'))
 usag = UserAgent()
 if way == 'c':
     # extension_path = "V:\\VISHESH AGRAWAL\\Chrome Extension\\Word Counter"
     # __tests/po_py/ectensions/chr_ext_001/popup.js
     extension_path = os.path.dirname(os.path.realpath(__file__))+'/ectensions/chr_ext_001/'
+    __dir_user = os.path.dirname(os.path.realpath(__file__))+'/__chr_user_data/'
+    # extension_path = binary_path
+    # if isserv :
+    #     chrWebDrivPath = binary_path
+    #     print('binary_path', binary_path)
+        # options.add_argument('--user-data-dir='+__dir_user)
+        
+    #     options.add_argument("load-extension=" + binary_path)
+    # else:
     options.add_argument("load-extension=" + extension_path)
+    # print('chr extension',options['load-extension'])
     # options.add_argument(f'user-agent={usag.random}')
     ua='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
     options.add_argument(f'user-agent={ua}')
@@ -154,7 +172,10 @@ try:
         # driver = webdriver.Chrome(options=options)
         # driver = webdriver.Chrome(options=options,executable_path=chrWebDrivPath)
         # driver = webdriver.Chrome(options=options,executable_path=chrWebDrivPath)
+        # driver = webdriver.Chrome(service=Service(executable_path=chrWebDrivPath), options=options)
         driver = webdriver.Chrome(service=Service(executable_path=chrWebDrivPath), options=options)
+        # driver = webdriver.Remote("http://localhost:4444", options=webdriver.ChromeOptions())
+        # driver = webdriver.Remote("http://localhost:4444", options=options)
         #driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         # driver = webdriver.Chrome(service=type('',(),{"path":chrWebDrivPath}))
     if way == 'f':
@@ -165,6 +186,7 @@ try:
         # driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
         # driver = webdriver.Firefox(service=Service(ChromeDriverManager().install()), options=options)
         # driver = webdriver.Firefox(foxWebDrivPath)
+    driver.execute_script("return navigator.userAgent")
 
 except Exception as ex:
     _print(ex)
@@ -191,15 +213,15 @@ get_screenshot_as_file('file.png')
 save_screenshot('file2.png')
 '''
 
-if way == 'c':
-    stealth(driver,
-            languages=["en-US", "en"],
-            vendor="Google Inc.",
-            platform="Win32",
-            webgl_vendor="Intel Inc.",
-            renderer="Intel Iris OpenGL Engine",
-            fix_hairline=True,
-            )
+# if way == 'c':
+#     stealth(driver,
+#             languages=["en-US", "en"],
+#             vendor="Google Inc.",
+#             platform="Win32",
+#             webgl_vendor="Intel Inc.",
+#             renderer="Intel Iris OpenGL Engine",
+#             fix_hairline=True,
+#             )
 
 class WebDriver:
     def __init__(self, driver):
@@ -209,6 +231,7 @@ class WebDriver:
         return self.driver
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        ...
         self.driver.close()
         self.driver.quit()
 
@@ -269,7 +292,7 @@ cook2={
 
 nextTime=int(time.time())+(365*86400)
 cookdict = {
-        "domain": "www.ozon.ru",
+    "domain": "www.ozon.ru",
     "expiry": nextTime, #1775861041,
     "httpOnly": True,
     "name": "__Secure-ETC",
@@ -471,20 +494,79 @@ def getContent(url, driver, getAsJson = True):
     # getAsJson = True
     if getAsJson:
 
-        for i in range(10):
+        loaded = False
+
+        coo_keys = 'cookeys_123456'
+        fn = f'/resrs/{coo_keys}_{way}_cookies' # resrs -- resorces
+        coore = 2
+        stage = 'nothing'
+        for i in range(20): # 10
             element = False
+
+            title = driver.title
+            if title == 'Antibot Challenge Page':
+                stage = 'wait'
+            if title == 'Доступ ограничен':
+                stage = 'btnClick'
+
+            print('title',title)
+            print('stage', stage)
+            
+            if stage == 'wait' :
+                print('! title',title)
+                print('! stage', stage)
+                sec=2
+                _print(color.GREEN + f'sleep +{sec}s ({i})' + color.END )
+                time.sleep(sec)
+                continue
+                print('never work')
+            if stage == 'wait' :
+                print('never work')
             try:
+
+                if stage == 'btnClick' :
+                    print('! title',title)
+                    print('! stage', stage)
+                    sec=2
+                    time.sleep(sec)
+                    try:
+                        sec=2
+                        time.sleep(sec)
+                        _element = driver.find_element(By.CSS_SELECTOR, 'button#reload-button.rb')
+                        _element.click()
+                        _print(color.GREEN + f'click +{sec}s ({i})' + color.END )
+                    except Exception as ex:
+                        print( f'click fail. line: {line()}')
+                        print(ex.msg, f'line: {line()}')
+                    continue
+
+                # driver.execute_script("document.querySelector('#g-recaptcha-response-1').setAttribute('style', 'width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px;');")
+                driver.execute_script("document.querySelector('body').setAttribute('data-ts-ozy', 'ozy-test');")
                 # _print(type(htpsrc))
                 element = driver.find_element(By.TAG_NAME, 'pre')
                 # _print(jpsrc)
+                loaded = True
             except Exception as ex:
                     # print(ex.split('\n')[0])
                     # print(ex)
                     print(ex.msg, f'line: {line()}')
                     # a=[print(att) for att in dir(ex)]
+                    # class="rb"
             if not element:
-                _print(color.RED + 'sleep +1s' + color.END )
-                time.sleep(1)
+                print(driver.page_source)
+                lg.logTime(f'html filed. try {i}')
+                print(driver.title)
+                sec=7
+                _print(color.RED + f'sleep +{sec}s' + color.END )
+                time.sleep(sec)
+                saveCookies(fn, wd, True)
+                driver.get(url)
+                cookieReload = False
+                if coore:
+                    cookieReload = True
+                addCookies(fn, cookieReload, wd)
+                if coore>0:
+                    coore-=1
                 continue
 
 
@@ -498,7 +580,10 @@ def getContent(url, driver, getAsJson = True):
             dpsrc = json.loads(jsn)
             jsnin = dpsrc
             break
-        
+        if not loaded:
+            _print(wd.page_source)
+            lg.logTime('html out')
+
         # _print(wd.page_source)
         # lg.logTime('html out')
         # wd.save_screenshot('imgs/shot/homdy.png')
@@ -531,6 +616,8 @@ def getPages(wd,urls):
         # _print('getPages ...', f'line: {line()}')
         # _print('url', url, f'line: {line()}')
         jsnin = getContent(jsonUrl, wd, getAsJson)
+        if not jsnin:
+            continue
         # _print('getPages ...', f'line: {line()}')
         jsn = getData(jsnin)
         # _print('getPages ...', f'line: {line()}')
@@ -571,6 +658,8 @@ def getUrls(catalogUrl='',driver=False):
         msg = (Fore.GREEN + 'start get catalog' + Fore.RESET)
         print(msg)
         html = getContent(catalogUrl, wd, getAsJson)
+        if not html:
+            return urls
         # print(html)
         # items = driver.find_elements_by_xpath('//div[@data-market="item-photo"]')
         # items[0].click()
@@ -623,8 +712,60 @@ def getUrls(catalogUrl='',driver=False):
         print(ex)
         msg = ex.msg
         msg = (Fore.GREEN + msg + Fore.RESET)
-        _print(msg)
+        _print(msg, f'line: {line()}')
     return urls
+
+
+def addCookies(coofname, hasErr, wd):
+    fn = coofname
+    pdest = os.path.dirname(os.path.realpath(__file__))+fn # path for cookies
+    dest_ex = os.path.isfile(pdest)
+    # if not hasErr:
+    try:
+        ...
+        if hasErr:
+            raise ValueError('cercles with no data')
+        if dest_ex:
+            print ('fl exists:',fn)
+            with open(f'.{fn}','rb') as hendl: # relative file path
+                cookies = pickle.load( hendl)
+                # cookies = cook2
+                lg.logTime('cookies add')
+                # _print('cookies')
+                # _print(cookies)
+                for cookie in cookies:
+                #     cookie['domain'] = 'www.ozon.ru'
+                    # cooJsn = json.dumps(cookie,indent=4)
+                    # _print(cooJsn)
+                    wd.add_cookie(cookie)
+                #     lg.logTime("cookie:\n"+cooJsn)
+
+    except Exception as ex:
+        _print(ex, f'line: {line()}')
+        lg.logTime('cookies error')
+        _print('COOKS 2')
+        for cookN,cookV in cook2.items():
+            cookdict['name'] = cookN
+            cookdict['value'] = cookV
+            # _print(f'{cookN:20}',cookV)
+            wd.add_cookie(cookdict)
+
+
+def saveCookies(coofname, wd, logdump=False):
+    fn = coofname
+    cookies = wd.get_cookies()
+    if logdump:
+        _print('cookies log dump:')
+        for coo in cookies:
+            _print(type(coo))
+            _print(coo)
+            # _cook = json.loads(cookies)
+            _cook = json.dumps(coo, indent=4)
+            _print(_cook)
+    with open(f'.{fn}','wb') as hendl: # relative file path
+        pickle.dump(cookies, hendl)
+        lg.logTime('cookies saved')
+
 
 # with WebDriver(webdriver.Chrome(**webdkargs)) as wd:
 hasErr=True
@@ -635,39 +776,10 @@ with WebDriver(driver) as wd:
         lg.logTime('parse start')
         wd.get(url)
         lg.logTime('page get')
+
         coo_keys = 'cookeys_123456'
         fn = f'/resrs/{coo_keys}_{way}_cookies' # resrs -- resorces
-        pdest = os.path.dirname(os.path.realpath(__file__))+fn # path for cookies
-        dest_ex = os.path.isfile(pdest)
-        # if not hasErr:
-        try:
-            ...
-            if hasErr:
-                raise ValueError('cercles with no data')
-            if dest_ex:
-                _print ('fl exists:',fn)
-                with open(f'.{fn}','rb') as hendl: # relative file path
-                    cookies = pickle.load( hendl)
-                    # cookies = cook2
-                    lg.logTime('cookies add')
-                    # _print('cookies')
-                    # _print(cookies)
-                    for cookie in cookies:
-                    #     cookie['domain'] = 'www.ozon.ru'
-                        # cooJsn = json.dumps(cookie,indent=4)
-                        # _print(cooJsn)
-                        wd.add_cookie(cookie)
-                    #     lg.logTime("cookie:\n"+cooJsn)
-
-        except Exception as ex:
-            _print(ex, f'line: {line()}')
-            lg.logTime('cookies error')
-            _print('COOKS 2')
-            for cookN,cookV in cook2.items():
-                cookdict['name'] = cookN
-                cookdict['value'] = cookV
-                # _print(f'{cookN:20}',cookV)
-                wd.add_cookie(cookdict)
+        addCookies(fn, False, wd)
 
         try:
             lg.logTime('get json start')
@@ -687,10 +799,13 @@ with WebDriver(driver) as wd:
                 lg.save(' '.join(uargs))
                 # urls = [url]
 
+                # get catalog
                 # https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=/category/sistemnye-bloki-15704/?page=7
                 urls = getUrls(catalogUrl, wd)
                 # _print(f'line: {line()}')
                 lg.logTime(f'got urls: {len(urls)}')
+                
+                # get page item
                 _results = getPages(wd, urls)
                 results.extend(_results)
             uniclen = set()
@@ -729,10 +844,7 @@ with WebDriver(driver) as wd:
         # time.sleep(tsp)
         # time.sleep(100)
         # lg.logTime(f'Timeout {tsp}')
-        cookies = wd.get_cookies()
-        with open(f'.{fn}','wb') as hendl: # relative file path
-            pickle.dump(cookies, hendl)
-            lg.logTime('cookies saved')
+        saveCookies(fn, wd)
     except Exception as ex:
         _print(ex)
         print(ex)

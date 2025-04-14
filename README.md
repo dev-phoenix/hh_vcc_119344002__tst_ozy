@@ -1,4 +1,6 @@
-# test script
+## test script
+
+# OZY v0.2
 
 ### install google-chrome v98 on server:
 ```sh
@@ -6,7 +8,7 @@
 sudo dpkg -i chrome_96_x64.deb
 sudo apt install -y -f
 sudo google-chrome --version
-# if needed to remove^
+# if needed to remove:
 # apt remove google-chrome
 ```
 
@@ -17,3 +19,4 @@ python3 -m venv .env
 pip install -r requirements.txt
 python3 main.py
 ```
+
